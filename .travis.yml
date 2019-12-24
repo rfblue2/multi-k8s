@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t rfblue2/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run rfblue2/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t rfblue2/multi-client ./client
+  - docker build -t rfblue2/multi-nginx ./nginx
+  - docker build -t rfblue2/multi-server ./server
+  - docker build -t rfblue2/multi-worker ./worker
+  # Log into the docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take images and push to docker hub
+  - docker push rfblue2/multi-client
+  - docker push rfblue2/multi-nginx
+  - docker push rfblue2/multi-server
+  - docker push rfblue2/multi-worker
